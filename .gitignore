@@ -1,0 +1,15 @@
+# standard ignores
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+~$*.xlsx
+
+# Cache and Logs
+graph-cache/
+logs/
+
+# Large binaries and data files
+*.jar
+*.osm.pbf
