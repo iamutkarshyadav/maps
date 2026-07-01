@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zepto Routing Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    
+    <div class="container">
+        <div class="glass-card">
+            <h1>Zepto Routing</h1>
+            <p class="subtitle">AI-Powered Vehicle Routing Optimization</p>
+            
+            <div id="main-section">
+                <a href="/download_template" class="btn-primary">
+                    <i class="fas fa-file-excel" style="margin-right: 8px;"></i> Download S&OP Template
+                </a>
+                
+                <form id="upload-form">
+                    <div class="upload-zone" id="drop-zone">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h3>Drop your S&OP file here</h3>
+                        <p class="subtitle" style="margin-bottom: 0;">or click to browse (.xlsx)</p>
+                        <input type="file" id="file-input" accept=".xlsx" required>
+                    </div>
+                    
+                    <p id="file-name" style="color: var(--zepto-green); font-weight: 600; margin-bottom: 1rem; display: none;"></p>
+                    
+                    <button type="submit" class="btn-submit" id="submit-btn" disabled>
+                        Run Optimization <i class="fas fa-rocket" style="margin-left: 8px;"></i>
+                    </button>
+                </form>
+            </div>
+            
+            <div id="loading-overlay">
+                <div class="spinner"></div>
+                <h2 style="margin: 0; background: -webkit-linear-gradient(45deg, var(--zepto-light-purple), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Crunching 15,000+ Routes...</h2>
+                <p style="color: var(--text-muted); margin-top: 10px;">This may take 1-2 minutes. Please do not close the page.</p>
+            </div>
+            
+            <div id="results-section">
+                <h2 style="color: var(--zepto-green); margin-bottom: 5px;"><i class="fas fa-check-circle"></i> Optimization Complete!</h2>
+                <p class="subtitle" style="margin-bottom: 2rem;">Your routes have been successfully calculated.</p>
+                
+                <a href="/download_results" class="btn-primary" style="margin-bottom: 10px;">
+                    <i class="fas fa-download" style="margin-right: 8px;"></i> Download Final Master Plan
+                </a>
+                <a href="/view_map" target="_blank" class="btn-secondary">
+                    <i class="fas fa-map-marked-alt" style="margin-right: 8px;"></i> View Interactive Map
+                </a>
+                <button id="reset-btn" class="btn-secondary" style="margin-top: 20px; border: none; background: transparent; color: var(--text-muted);">
+                    <i class="fas fa-redo"></i> Run Another Optimization
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const submitBtn = document.getElementById('submit-btn');
+        const uploadForm = document.getElementById('upload-form');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const mainSection = document.getElementById('main-section');
+        const resultsSection = document.getElementById('results-section');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Drag and drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.xlsx')) {
+                    fileInput.files = files; // Attach to input
+                    fileName.textContent = file.name;
+                    fileName.style.display = 'block';
+                    submitBtn.disabled = false;
+                } else {
+                    alert('Please upload a valid .xlsx Excel file.');
+                }
+            }
+        }
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!fileInput.files[0]) return;
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            loadingOverlay.classList.add('active');
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                loadingOverlay.classList.remove('active');
+                
+                if (response.ok) {
+                    mainSection.style.display = 'none';
+                    resultsSection.style.display = 'flex';
+                } else {
+                    alert('Error: ' + result.error + (result.details ? '\n\n' + result.details : ''));
+                }
+            } catch (error) {
+                loadingOverlay.classList.remove('active');
+                alert('An error occurred during upload.');
+                console.error(error);
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            mainSection.style.display = 'block';
+            resultsSection.style.display = 'none';
+            fileInput.value = '';
+            fileName.style.display = 'none';
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
