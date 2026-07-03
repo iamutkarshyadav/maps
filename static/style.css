@@ -221,3 +221,32 @@ p.subtitle {
     50% { transform: translate(30px, 30px); }
     100% { transform: translate(0, 0); }
 }
+
+/* Settings floating action button */
+.settings-fab {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    text-decoration: none;
+    z-index: 100;
+    transition: color 0.3s, transform 0.3s, border-color 0.3s;
+    cursor: pointer;
+}
+.settings-fab:hover {
+    color: var(--zepto-light-purple);
+    border-color: var(--zepto-light-purple);
+    transform: rotate(90deg);
+}
+

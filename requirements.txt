@@ -1,1 +1,6 @@
 requests
+pandas
+ortools
+openpyxl
+folium
+flask

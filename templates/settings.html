@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Zepto Routing</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 2rem 0;
+        }
+        .settings-container {
+            width: 100%;
+            max-width: 900px;
+            padding: 1rem 2rem 4rem;
+            margin: 0 auto;
+        }
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        .settings-header h1 {
+            font-size: 2rem;
+            margin: 0;
+        }
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+        .back-link:hover { color: #fff; }
+        .back-link i { margin-right: 6px; }
+
+        /* ─── Section Cards ─── */
+        .settings-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title i {
+            color: var(--zepto-light-purple);
+            font-size: 1rem;
+        }
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ─── Tables ─── */
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .config-table th {
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .config-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .config-table tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+        .config-table .truck-name {
+            font-weight: 600;
+            color: var(--zepto-light-purple);
+        }
+
+        /* ─── Inputs ─── */
+        .config-input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            width: 80px;
+            text-align: center;
+            font-family: 'Inter', monospace;
+            transition: border-color 0.3s;
+        }
+        .config-input:focus {
+            outline: none;
+            border-color: var(--zepto-light-purple);
+        }
+        .config-input.wide { width: 120px; }
+
+        /* ─── Toggle ─── */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        .toggle-label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .toggle-desc {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 28px;
+            transition: 0.3s;
+        }
+        .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 22px; width: 22px;
+            left: 3px; bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--zepto-green);
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(24px);
+        }
+
+        /* ─── Column Mapping ─── */
+        .col-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .col-card:last-child { border-bottom: none; }
+        .col-badge {
+            background: rgba(116, 27, 218, 0.2);
+            border: 1px solid rgba(116, 27, 218, 0.4);
+            color: var(--zepto-light-purple);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: monospace;
+            white-space: nowrap;
+            min-width: 100px;
+            text-align: center;
+        }
+        .col-badge.required {
+            background: rgba(0, 200, 83, 0.15);
+            border-color: rgba(0, 200, 83, 0.4);
+            color: var(--zepto-green);
+        }
+        .col-info .col-desc { font-size: 0.9rem; }
+        .col-info .col-example {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        /* ─── Cache Section ─── */
+        .cache-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+        }
+        .cache-status {
+            flex: 1;
+        }
+        .cache-stat {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .cache-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .cache-dot.active { background: var(--zepto-green); }
+        .cache-dot.empty { background: var(--text-muted); }
+
+        /* ─── Buttons ─── */
+        .btn-save {
+            background: linear-gradient(90deg, var(--zepto-green), #00e676);
+            border: none;
+            padding: 12px 32px;
+            border-radius: 30px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
+            width: 100%;
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 200, 83, 0.6);
+        }
+        .btn-danger {
+            background: rgba(211, 47, 47, 0.15);
+            border: 1px solid rgba(211, 47, 47, 0.4);
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: #ef5350;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.3s;
+        }
+        .btn-danger:hover {
+            background: rgba(211, 47, 47, 0.3);
+        }
+
+        /* ─── Toast ─── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 200, 83, 0.9);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            z-index: 999;
+            transition: transform 0.4s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.error {
+            background: rgba(211, 47, 47, 0.9);
+        }
+
+        /* Inline group for dock/solver */
+        .inline-group {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .inline-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .inline-field label {
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="settings-container">
+        <!-- Header -->
+        <div class="settings-header">
+            <h1><i class="fas fa-cog" style="margin-right: 10px; font-size: 1.5rem;"></i> Settings</h1>
+            <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Portal</a>
+        </div>
+
+        <!-- ═══════ S&OP Column Mapping ═══════ -->
+        <div class="settings-section">
+            <div class="section-title"><i class="fas fa-columns"></i> S&OP Column Mapping</div>
+            <div class="section-desc">These columns are required in your uploaded Excel file's "S&OP" sheet. The system reads them to build the optimization model.</div>
+            {% for col_name, col_info in column_mapping.items() %}
+            <div class="col-card">
+                <span class="col-badge {{ 'required' if col_info.required else '' }}">{{ col_name.strip() }}</span>
+                <div class="col-info">
+                    <div class="col-desc">{{ col_info.description }}{% if col_info.required %} <strong>(Required)</strong>{% endif %}</div>
+                    <div class="col-example">Example: <code>{{ col_info.example }}</code></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ═══════ Truck Fleet ═══════ -->
+        <div class="settings-section">
+            <div class="section-title"><i class="fas fa-truck"></i> Truck Fleet Configuration</div>
+            <div class="section-desc">Edit truck capacities, loading/unloading times. Changes apply to the next optimization run.</div>
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Truck Type</th>
+                        <th>Capacity (kg)</th>
+                        <th>Loading (min)</th>
+                        <th>Unloading (min)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for truck, cap in config.truck_capacities.items() %}
+                    <tr>
+                        <td class="truck-name">{{ truck }}</td>
+                        <td><input class="config-input" type="number" data-field="truck_capacities" data-key="{{ truck }}" value="{{ cap }}"></td>
+                        <td><input class="config-input" type="number" data-field="loading_times" data-key="{{ truck }}" value="{{ config.loading_times.get(truck, 60) }}"></td>
+                        <td><input class="config-input" type="number" data-field="unloading_times" data-key="{{ truck }}" value="{{ config.unloading_times.get(truck, 60) }}"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ═══════ Dock Overheads ═══════ -->
+        <div class="settings-section">
+            <div class="section-title"><i class="fas fa-warehouse"></i> Dock & Solver Settings</div>
+            <div class="section-desc">Gate-in, dock-in, dock-out, gate-out times (summed into one value per hub type). Each phase is 15 min × 4 = 60 min default.</div>
+            <div class="inline-group">
+                <div class="inline-field">
+                    <label>MH Dock Overhead (min):</label>
+                    <input class="config-input wide" type="number" id="mh_dock_overhead" value="{{ config.mh_dock_overhead }}">
+                </div>
+                <div class="inline-field">
+                    <label>DH Dock Overhead (min):</label>
+                    <input class="config-input wide" type="number" id="dh_dock_overhead" value="{{ config.dh_dock_overhead }}">
+                </div>
+                <div class="inline-field">
+                    <label>Solver Time Limit (sec):</label>
+                    <input class="config-input wide" type="number" id="solver_time_limit" value="{{ config.solver_time_limit }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ Contract Configuration ═══════ -->
+        <div class="settings-section">
+            <div class="section-title"><i class="fas fa-file-contract"></i> Vendor Contract Configuration</div>
+            <div class="section-desc">Define time budgets and trip counts for each contract type.</div>
+            <table class="config-table">
+                <thead>
+                    <tr>
+                        <th>Contract</th>
+                        <th>Total Hrs</th>
+                        <th>Effective Hrs</th>
+                        <th>Effective Min</th>
+                        <th>Trips</th>
+                        <th>Min / Trip</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ckey, cval in config.contract_config.items() %}
+                    <tr>
+                        <td class="truck-name">{{ ckey }}</td>
+                        <td><input class="config-input" type="number" data-contract="{{ ckey }}" data-cfield="total_hours" value="{{ cval.total_hours }}"></td>
+                        <td><input class="config-input" type="number" data-contract="{{ ckey }}" data-cfield="effective_hours" value="{{ cval.effective_hours }}"></td>
+                        <td><input class="config-input" type="number" data-contract="{{ ckey }}" data-cfield="effective_minutes" value="{{ cval.effective_minutes }}"></td>
+                        <td><input class="config-input" type="number" data-contract="{{ ckey }}" data-cfield="num_trips" value="{{ cval.num_trips }}"></td>
+                        <td><input class="config-input" type="number" data-contract="{{ ckey }}" data-cfield="minutes_per_trip" value="{{ cval.minutes_per_trip }}"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="toggle-row" style="margin-top: 1rem;">
+                <div>
+                    <div class="toggle-label">Mixed Contract Mode</div>
+                    <div class="toggle-desc">When on, the solver uses both 12H and 24H vehicles simultaneously and picks the best mix.</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="mixed_contract_mode" {{ 'checked' if config.mixed_contract_mode else '' }}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- ═══════ Cache Management ═══════ -->
+        <div class="settings-section">
+            <div class="section-title"><i class="fas fa-database"></i> Distance Matrix Cache</div>
+            <div class="section-desc">The system caches GraphHopper distance/time calculations. Re-running with the same hub set skips re-fetching.</div>
+            <div class="cache-info">
+                <div class="cache-status">
+                    <div id="cache-status-text"><span class="cache-dot empty"></span> Loading...</div>
+                    <div class="cache-stat" id="cache-rows-text"></div>
+                </div>
+                <button class="btn-danger" id="clear-cache-btn"><i class="fas fa-trash" style="margin-right: 6px;"></i> Clear Cache</button>
+            </div>
+        </div>
+
+        <!-- ═══════ Save Button ═══════ -->
+        <button class="btn-save" id="save-btn">
+            <i class="fas fa-save" style="margin-right: 8px;"></i> Save Settings
+        </button>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ─── Toast helper ────────────────────────────────────────────
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.className = 'toast'; }, 3000);
+        }
+
+        // ─── Load cache info ─────────────────────────────────────────
+        async function loadCacheInfo() {
+            try {
+                const resp = await fetch('/api/cache_info');
+                const info = await resp.json();
+                const statusEl = document.getElementById('cache-status-text');
+                const rowsEl = document.getElementById('cache-rows-text');
+
+                if (info.exists && info.rows > 0) {
+                    statusEl.innerHTML = '<span class="cache-dot active"></span> Cache Active';
+                    rowsEl.textContent = `${info.rows.toLocaleString()} cached route pairs · Hash: ${info.hash}`;
+                } else {
+                    statusEl.innerHTML = '<span class="cache-dot empty"></span> No Cache';
+                    rowsEl.textContent = 'Distance matrix will be fetched fresh on next run.';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        loadCacheInfo();
+
+        // ─── Clear cache ─────────────────────────────────────────────
+        document.getElementById('clear-cache-btn').addEventListener('click', async () => {
+            if (!confirm('Clear the distance matrix cache? The next run will re-fetch all routes from GraphHopper.')) return;
+            try {
+                const resp = await fetch('/api/clear_cache', { method: 'POST' });
+                const result = await resp.json();
+                if (resp.ok) {
+                    showToast('Cache cleared!');
+                    loadCacheInfo();
+                } else {
+                    showToast(result.error, true);
+                }
+            } catch (e) {
+                showToast('Failed to clear cache', true);
+            }
+        });
+
+        // ─── Save settings ───────────────────────────────────────────
+        document.getElementById('save-btn').addEventListener('click', async () => {
+            // Gather truck data
+            const truck_capacities = {};
+            const loading_times = {};
+            const unloading_times = {};
+
+            document.querySelectorAll('[data-field="truck_capacities"]').forEach(el => {
+                truck_capacities[el.dataset.key] = parseInt(el.value) || 0;
+            });
+            document.querySelectorAll('[data-field="loading_times"]').forEach(el => {
+                loading_times[el.dataset.key] = parseInt(el.value) || 0;
+            });
+            document.querySelectorAll('[data-field="unloading_times"]').forEach(el => {
+                unloading_times[el.dataset.key] = parseInt(el.value) || 0;
+            });
+
+            // Gather contract config
+            const contract_config = {};
+            document.querySelectorAll('[data-contract]').forEach(el => {
+                const ckey = el.dataset.contract;
+                const cfield = el.dataset.cfield;
+                if (!contract_config[ckey]) contract_config[ckey] = {};
+                contract_config[ckey][cfield] = parseInt(el.value) || 0;
+            });
+
+            const payload = {
+                truck_capacities,
+                loading_times,
+                unloading_times,
+                mh_dock_overhead: parseInt(document.getElementById('mh_dock_overhead').value) || 60,
+                dh_dock_overhead: parseInt(document.getElementById('dh_dock_overhead').value) || 60,
+                solver_time_limit: parseInt(document.getElementById('solver_time_limit').value) || 60,
+                contract_config,
+                mixed_contract_mode: document.getElementById('mixed_contract_mode').checked,
+            };
+
+            try {
+                const resp = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const result = await resp.json();
+                if (resp.ok) {
+                    showToast('Settings saved successfully!');
+                } else {
+                    showToast('Error: ' + result.error, true);
+                }
+            } catch (e) {
+                showToast('Failed to save settings', true);
+                console.error(e);
+            }
+        });
+    </script>
+</body>
+</html>

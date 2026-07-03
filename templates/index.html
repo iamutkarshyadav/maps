@@ -10,6 +10,11 @@
 <body>
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
+
+    <!-- Top-right settings gear -->
+    <a href="/settings" class="settings-fab" title="Settings">
+        <i class="fas fa-cog"></i>
+    </a>
     
     <div class="container">
         <div class="glass-card">
@@ -71,7 +76,6 @@
         const resultsSection = document.getElementById('results-section');
         const resetBtn = document.getElementById('reset-btn');
 
-        // Drag and drop events
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, preventDefaults, false);
         });
@@ -90,9 +94,7 @@
         });
 
         dropZone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
+            handleFiles(e.dataTransfer.files);
         });
 
         dropZone.addEventListener('click', () => fileInput.click());
@@ -105,7 +107,7 @@
             if (files.length > 0) {
                 const file = files[0];
                 if (file.name.endsWith('.xlsx')) {
-                    fileInput.files = files; // Attach to input
+                    fileInput.files = files;
                     fileName.textContent = file.name;
                     fileName.style.display = 'block';
                     submitBtn.disabled = false;
@@ -117,24 +119,20 @@
 
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             if (!fileInput.files[0]) return;
-            
+
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
-            
             loadingOverlay.classList.add('active');
-            
+
             try {
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
-                
                 const result = await response.json();
-                
                 loadingOverlay.classList.remove('active');
-                
+
                 if (response.ok) {
                     mainSection.style.display = 'none';
                     resultsSection.style.display = 'flex';
